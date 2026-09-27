@@ -1,0 +1,62 @@
+[
+  {
+    "id": "INC-001",
+    "service": "Payment Service",
+    "symptoms": [
+      "Payment requests returning HTTP 500 errors",
+      "Kafka consumer lag increasing"
+    ],
+    "root_cause": "Kafka consumer rebalance caused delayed payment event processing.",
+    "resolution": "Restarted affected consumers and increased Kafka partition capacity.",
+    "outcome": "Payment processing returned to normal and consumer lag dropped.",
+    "resolution_status": "Successfully resolved."
+  },
+  {
+    "id": "INC-002",
+    "service": "Auth Service",
+    "symptoms": [
+      "Login requests timing out",
+      "Redis latency spikes"
+    ],
+    "root_cause": "Redis connection pool exhaustion under peak load.",
+    "resolution": "Increased connection pool size and added a circuit breaker.",
+    "outcome": "Login latency returned to baseline.",
+    "resolution_status": "Successfully resolved."
+  },
+  {
+    "id": "INC-003",
+    "service": "Payment Service",
+    "symptoms": [
+      "Intermittent HTTP 500 errors on checkout",
+      "Kafka consumer lag climbing after deploy"
+    ],
+    "root_cause": "Consumer rebalance triggered by a rolling deployment.",
+    "resolution": "Restarted consumers and staggered the rollout.",
+    "outcome": "Errors cleared and lag recovered within minutes.",
+    "resolution_status": "Successfully resolved."
+  },
+  {
+    "id": "INC-004",
+    "service": "Search Service",
+    "symptoms": [
+      "Search results returning empty",
+      "Elasticsearch cluster in yellow state"
+    ],
+    "root_cause": "Unassigned shards after a node restart.",
+    "resolution": "Reallocated shards and increased disk watermark thresholds.",
+    "outcome": "Cluster returned to green and search recovered.",
+    "resolution_status": "Successfully resolved."
+  },
+  {
+    "id": "INC-005",
+    "service": "Payment Service",
+    "symptoms": [
+      "HTTP 500 spike on payment endpoint",
+      "Growing Kafka consumer lag"
+    ],
+    "root_cause": "Consumer group rebalance during autoscaling event.",
+    "resolution": "Restarted affected consumers and tuned session timeout.",
+    "outcome": "Payment processing stabilized.",
+    "resolution_status": "Successfully resolved."
+  }
+]
