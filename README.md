@@ -40,85 +40,93 @@ incidentiq/
 └── README.md
 ```
 
-## Setup
+## Install and run
 
-1. Create and activate a virtual environment:
+### Prerequisites
 
-   ```bash
-   python -m venv .venv
-   # Windows
-   .venv\Scripts\activate
-   # macOS/Linux
-   source .venv/bin/activate
-   ```
+- Python 3.10 or later
+- Node.js 18 or later and npm
+- API keys for [Hindsight](https://hindsight.vectorize.io/) and [Groq](https://console.groq.com/)
 
-2. Install dependencies:
+### 1. Clone the repository
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+git clone <repository-url>
+cd incidentiq
+```
 
-3. Configure your keys in `.env` (do not commit this file):
+### 2. Create a Python environment and install dependencies
 
-   ```
-   HINDSIGHT_API_URL=https://api.hindsight.vectorize.io
-   HINDSIGHT_API_KEY=YOUR_HINDSIGHT_API_KEY
-   GROQ_API_KEY=YOUR_GROQ_API_KEY
-   HINDSIGHT_BANK_ID=incidentiq
-   GROQ_MODEL=openai/gpt-oss-120b
-   ```
+```bash
+python -m venv .venv
+```
 
-## Usage (Phase 1)
+Activate it, then install the Python packages:
 
-Seed the memory bank with the synthetic incidents:
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+```bash
+# macOS/Linux
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. Configure API keys
+
+Copy `.env.example` to `.env` and add your Hindsight and Groq API keys:
+
+```powershell
+# Windows PowerShell
+Copy-Item .env.example .env
+```
+
+```bash
+# macOS/Linux
+cp .env.example .env
+```
+
+Keep `.env` private; do not commit it.
+
+### 4. (Optional) Seed incident memory
+
+This loads the sample incidents from `data/incidents.json` into Hindsight. Run it once if you want the app to start with historical context:
 
 ```bash
 python -m app.load_incidents
 ```
 
-Store a single first incident (alternative to the loader):
+### 5. Start the backend
+
+From the repository root, with the Python environment activated:
 
 ```bash
-python app/test_hindsight.py
+python -m uvicorn app.api:app --reload --port 8000
 ```
 
-Recall it:
+Leave this terminal running. The API is available at `http://localhost:8000`.
+
+
+### 6. Start the frontend
+
+Open a second terminal, go to the repository's `frontend` directory, then install and start the UI:
 
 ```bash
-python app/test_recall.py
+cd frontend
+npm install
+npm run dev
 ```
 
-Run the full agent (recall + reason):
+Open `http://localhost:5173` in your browser. Keep both terminals running; Vite forwards `/api` requests to the backend on port 8000.
 
-```bash
-python -m app.main
-```
-
-## Web app (API + UI)
-
-The Incident Command Center has a FastAPI backend and a React (Vite) frontend.
-
-**1. Start the backend** (from `incidentiq/`, venv activated):
-
-```bash
-python -m uvicorn app.api:app --port 8000
-```
-
-Endpoints: `/api/health`, `/api/investigate`, `/api/feedback`,
-`/api/memory`, `/api/history`, `/api/learning`.
-
-**2. Start the frontend** (from `incidentiq/frontend/`):
-
-```bash
-npm install      # first time only
-npm run dev      # serves http://localhost:5173
-```
+The API endpoints are `/api/health`, `/api/investigate`, `/api/feedback`, `/api/memory`, `/api/history`, and `/api/learning`.
 
 Vite proxies `/api` to the backend on port 8000, so run both together.
 
-> Note: if `npm install` fails with `ENOTFOUND` against a corporate registry,
-> the included `frontend/.npmrc` pins the public npm registry
-> (`registry.npmjs.org`) to work around that.
+> If `npm install` fails with `ENOTFOUND` against a corporate registry, the included `frontend/.npmrc` pins the public npm registry (`registry.npmjs.org`).
 
 ### The four screens
 
@@ -140,8 +148,3 @@ Vite proxies `/api` to the backend on port 8000, so run both together.
 - **Phase 6** — Demo mode (before memory / after memory)
 - **Phase 7** — Docker, GitHub, deployment
 - **Phase 8** — 60-second demo video + README polish
-
-# Incident-response_agent
-
-
-
