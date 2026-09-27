@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # IncidentIQ
 
 An AI production incident response assistant that learns from past incidents.
@@ -140,3 +141,6 @@ Vite proxies `/api` to the backend on port 8000, so run both together.
 - **Phase 6** — Demo mode (before memory / after memory)
 - **Phase 7** — Docker, GitHub, deployment
 - **Phase 8** — 60-second demo video + README polish
+=======
+# Incident-response_agent
+>>>>>>> e362b6a964ade42850bec55f5a49ef8f5c153b0e
