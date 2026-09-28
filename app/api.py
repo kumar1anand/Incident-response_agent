@@ -27,8 +27,8 @@ from pydantic import BaseModel
 from app import store
 from app import insights
 from app.incident_agent import (
-    investigate_incident_structured,
-    record_resolution,
+    investigate_incident_structured_async,
+    record_resolution_async,
 )
 from app.memory import hindsight, BANK_ID
 
@@ -62,11 +62,11 @@ class FeedbackRequest(BaseModel):
 # ---------- Endpoints ----------
 
 @app.get("/api/health")
-def health():
+async def health():
     """Report backend + Hindsight connectivity for the header status pill."""
     hindsight_ok = True
     try:
-        hindsight.get_version()
+        await hindsight.aget_version()
     except Exception:
         hindsight_ok = False
     return {
@@ -77,13 +77,15 @@ def health():
 
 
 @app.post("/api/investigate")
-def investigate(req: InvestigateRequest):
+async def investigate(req: InvestigateRequest):
     """Investigate a new incident: recall memory + Groq analysis."""
     incident = (req.incident or "").strip()
     if not incident:
         raise HTTPException(status_code=400, detail="Incident text is required.")
 
-    analysis = investigate_incident_structured(incident, memory_enabled=req.memory_enabled)
+    analysis = await investigate_incident_structured_async(
+        incident, memory_enabled=req.memory_enabled
+    )
     record = store.add_investigation(incident, analysis)
 
     # Attach the record id so the UI can send feedback later.
@@ -104,14 +106,18 @@ Customer payment requests are intermittently failing.
 
 
 @app.post("/api/judge-demo")
-def judge_demo():
+async def judge_demo():
     """Run the same incident twice: once without memory, once with Hindsight.
 
     Powers the Judge Mode before/after story. Returns both analyses plus the
     incident text so the frontend can animate the contrast.
     """
-    without_memory = investigate_incident_structured(JUDGE_INCIDENT, memory_enabled=False)
-    with_memory = investigate_incident_structured(JUDGE_INCIDENT, memory_enabled=True)
+    without_memory = await investigate_incident_structured_async(
+        JUDGE_INCIDENT, memory_enabled=False
+    )
+    with_memory = await investigate_incident_structured_async(
+        JUDGE_INCIDENT, memory_enabled=True
+    )
 
     # Record the with-memory run so feedback + history reflect the demo.
     record = store.add_investigation(JUDGE_INCIDENT, with_memory)
@@ -125,7 +131,7 @@ def judge_demo():
 
 
 @app.post("/api/feedback")
-def feedback(req: FeedbackRequest):
+async def feedback(req: FeedbackRequest):
     """Record engineer feedback and, when it worked, retain it into memory."""
     if req.feedback not in ("worked", "didnt_work"):
         raise HTTPException(status_code=400, detail="Invalid feedback value.")
@@ -155,7 +161,7 @@ Outcome:
 Successfully resolved.
 """.strip()
         try:
-            record_resolution(content)
+            await record_resolution_async(content)
             record["retained"] = True
         except Exception as exc:  # noqa: BLE001
             record["retained"] = False
@@ -165,10 +171,10 @@ Successfully resolved.
 
 
 @app.get("/api/memory")
-def memory(limit: int = 50):
+async def memory(limit: int = 50):
     """List incidents currently remembered in Hindsight."""
     try:
-        result = hindsight.list_memories(bank_id=BANK_ID)
+        result = await hindsight.alist_memories(bank_id=BANK_ID)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"Hindsight error: {exc}") from exc
 

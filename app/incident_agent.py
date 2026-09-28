@@ -12,18 +12,24 @@ Two entry points:
     investigate_incident_structured(text)  -> structured dict (API / UI)
 """
 
+import asyncio
 import json
 
 from app.groq_client import generate_response, generate_json
 from app.memory import hindsight, BANK_ID
 
 
-def _recall_memories(incident: str):
-    """Recall relevant memories and return (memory_texts, joined_context)."""
-    result = hindsight.recall(bank_id=BANK_ID, query=incident)
+async def _recall_memories_async(incident: str):
+    """Recall relevant memories on the caller's active event loop."""
+    result = await hindsight.arecall(bank_id=BANK_ID, query=incident)
     memories = [memory.text for memory in result.results]
     context = "\n\n".join(memories) if memories else "(no relevant memories found)"
     return memories, context
+
+
+def _recall_memories(incident: str):
+  """Synchronous adapter for CLI and seed-script callers."""
+  return asyncio.run(_recall_memories_async(incident))
 
 
 def investigate_incident(incident: str) -> str:
@@ -70,7 +76,9 @@ Rules:
 """
 
 
-def investigate_incident_structured(incident: str, memory_enabled: bool = True) -> dict:
+async def investigate_incident_structured_async(
+  incident: str, memory_enabled: bool = True
+) -> dict:
     """Analyze an incident and return structured data for the UI.
 
     Args:
@@ -92,7 +100,7 @@ def investigate_incident_structured(incident: str, memory_enabled: bool = True) 
         memory_enabled: bool
     """
     if memory_enabled:
-        memories, historical_context = _recall_memories(incident)
+      memories, historical_context = await _recall_memories_async(incident)
     else:
         memories = []
         historical_context = "(memory disabled for this investigation)"
@@ -183,10 +191,24 @@ Analyze the new incident and return a JSON object with EXACTLY this shape:
     return data
 
 
+def investigate_incident_structured(incident: str, memory_enabled: bool = True) -> dict:
+    """Synchronous adapter for CLI callers."""
+    return asyncio.run(
+        investigate_incident_structured_async(incident, memory_enabled=memory_enabled)
+    )
+
+
+async def record_resolution_async(
+    content: str, context: str = "Incident resolution feedback"
+) -> None:
+    """Store an outcome using Hindsight on the active event loop."""
+    await hindsight.aretain(bank_id=BANK_ID, content=content, context=context)
+
+
 def record_resolution(content: str, context: str = "Incident resolution feedback") -> None:
     """Store an incident outcome / engineer feedback back into memory.
 
     This closes the learning loop: future recalls benefit from what actually
     worked (or did not) on past incidents.
     """
-    hindsight.retain(bank_id=BANK_ID, content=content, context=context)
+    asyncio.run(record_resolution_async(content, context=context))
