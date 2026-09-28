@@ -1,150 +1,145 @@
-# IncidentIQ
+# 🚨 IncidentIQ
 
-An AI production incident response assistant that learns from past incidents.
+### An AI SRE agent that *remembers* production incidents — and gets smarter every time.
 
-IncidentIQ combines **Hindsight** (long-term memory) with **Groq** (fast LLM
-reasoning). When a new incident comes in, it recalls similar historical
-incidents, reasons over them, and recommends investigation steps. After an
-engineer resolves the incident, the outcome is retained back into memory so the
-agent gets smarter over time.
+> When production breaks, the answer is usually buried in a past incident, a Slack thread, or an old postmortem. **IncidentIQ turns that scattered history into living agent memory** using [Hindsight](https://hindsight.vectorize.io/) + [Groq](https://console.groq.com/) — so every new incident is met with evidence, not guesswork.
 
-```
-incident
-   -> recall() similar past incidents (Hindsight)
-   -> reason over them (Groq)
-   -> recommendation
-   -> engineer resolves
-   -> retain() outcome (Hindsight learns)
-```
+---
 
-## Project structure
+## 🎥 Demo
+
+https://github.com/kumar1anand/incidentiq/raw/main/images/Screen%20Recording%202026-09-28%20195553.mp4
+
+<sub>▶️ Full walkthrough: [Judge Mode demo](images/Screen%20Recording%202026-09-28%20195553.mp4) · [Feature tour](images/Screen%20Recording%202026-09-28%20195705.mp4)</sub>
+
+---
+
+## 💡 The idea in one loop
 
 ```
-incidentiq/
-├── .venv/
-├── app/
-│   ├── __init__.py
-│   ├── config.py
-│   ├── memory.py            # Hindsight client (renamed to avoid shadowing the package)
-│   ├── groq_client.py
-│   ├── incident_agent.py
-│   ├── load_incidents.py   # seed memory from data/incidents.json
-│   ├── main.py
-│   ├── test_hindsight.py
-│   └── test_recall.py
-├── data/
-│   └── incidents.json
-├── .env
-├── .gitignore
-├── requirements.txt
-└── README.md
+🚨 New incident
+      ↓
+🧠 Hindsight recalls similar past incidents
+      ↓
+🤖 Groq reasons over the evidence
+      ↓
+💡 Evidence-backed recommendation
+      ↓
+👨‍💻 Engineer confirms the outcome
+      ↓
+🧠 Hindsight retains it  →  better next time
 ```
 
-## Install and run
+The agent doesn't just answer. **It learns.**
 
-### Prerequisites
+---
 
-- Python 3.10 or later
-- Node.js 18 or later and npm
-- API keys for [Hindsight](https://hindsight.vectorize.io/) and [Groq](https://console.groq.com/)
+## 🎬 Judge Mode — see memory change everything (60 sec)
 
-### 1. Clone the repository
+The headline feature: run the **same incident twice** — once with memory off, once with Hindsight on — and watch generic guessing become an evidence-backed fix.
+
+![Judge Mode — memory impact](images/Screenshot%202026-09-28%20195727.png)
+
+| Without memory | With Hindsight |
+| --- | --- |
+| Generic troubleshooting | 3 relevant incidents recalled |
+| No historical evidence | Previous root cause identified |
+| Confidence **35%** | Confidence **85%** |
+
+---
+
+## ✨ Features
+
+### 🕸️ Memory Graph
+An interactive knowledge graph of everything the agent knows — incidents linked to the services they hit and the root-cause families they belong to. Hover any node to trace its relationships.
+
+![Memory Graph](images/Screenshot%202026-09-28%20195748.png)
+
+### 🔮 Pattern Insights
+IncidentIQ mines memory for **recurring failure patterns** and **deployment risk** — so you can prevent the next outage, not just react to it. *(All numbers are computed from real data.)*
+
+![Pattern Insights](images/Screenshot%202026-09-28%20195807.png)
+
+### 📈 Agent Learning
+Watch recall grow with every investigation, plus incident breakdowns by service.
+
+![Agent Learning](images/Screenshot%202026-09-28%20195839.png)
+
+### 🧠 Incident Memory & 📋 History
+Everything retained in Hindsight, and every investigation with its reported outcome.
+
+![Incident Memory](images/Screenshot%202026-09-28%20195826.png)
+![Incident History](images/Screenshot%202026-09-28%20195852.png)
+
+---
+
+## 🏗️ Architecture
+
+```
+        ┌──────────────┐
+        │   React UI   │  Judge Mode · Graph · Patterns · Learning
+        └──────┬───────┘
+               │  /api
+        ┌──────▼───────┐
+        │   FastAPI    │  investigate · feedback · graph · patterns
+        └──────┬───────┘
+        ┌──────┴───────┐
+        ▼              ▼
+  ┌──────────┐   ┌───────────┐
+  │   Groq   │   │ Hindsight │  incidents · resolutions
+  │ reasoning│   │  memory   │  feedback · learned patterns
+  └──────────┘   └───────────┘
+```
+
+---
+
+## 🚀 Quick start
+
+**Prerequisites:** Python 3.10+, Node.js 18+, and API keys for [Hindsight](https://hindsight.vectorize.io/) and [Groq](https://console.groq.com/).
 
 ```bash
-git clone <repository-url>
-cd incidentiq
-```
-
-### 2. Create a Python environment and install dependencies
-
-```bash
+# 1. Backend
 python -m venv .venv
-```
-
-Activate it, then install the Python packages:
-
-```powershell
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1      # Windows  (macOS/Linux: source .venv/bin/activate)
 pip install -r requirements.txt
-```
 
-```bash
-# macOS/Linux
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+# 2. Keys — copy the template and add your keys
+Copy-Item .env.example .env       # macOS/Linux: cp .env.example .env
 
-### 3. Configure API keys
-
-Copy `.env.example` to `.env` and add your Hindsight and Groq API keys:
-
-```powershell
-# Windows PowerShell
-Copy-Item .env.example .env
-```
-
-```bash
-# macOS/Linux
-cp .env.example .env
-```
-
-Keep `.env` private; do not commit it.
-
-### 4. (Optional) Seed incident memory
-
-This loads the sample incidents from `data/incidents.json` into Hindsight. Run it once if you want the app to start with historical context:
-
-```bash
+# 3. Seed memory with sample incidents (once)
 python -m app.load_incidents
+
+# 4. Run the API
+python -m uvicorn app.api:app --port 8000
 ```
 
-### 5. Start the backend
-
-From the repository root, with the Python environment activated:
-
 ```bash
-python -m uvicorn app.api:app --reload --port 8000
-```
-
-Leave this terminal running. The API is available at `http://localhost:8000`.
-
-
-### 6. Start the frontend
-
-Open a second terminal, go to the repository's `frontend` directory, then install and start the UI:
-
-```bash
+# 5. Frontend (second terminal)
 cd frontend
 npm install
-npm run dev
+npm run dev        # opens http://localhost:5173
 ```
 
-Open `http://localhost:5173` in your browser. Keep both terminals running; Vite forwards `/api` requests to the backend on port 8000.
+Keep both running — Vite proxies `/api` to the backend on port 8000.
 
-The API endpoints are `/api/health`, `/api/investigate`, `/api/feedback`, `/api/memory`, `/api/history`, and `/api/learning`.
+> 💡 If `npm install` hits an `ENOTFOUND` corporate-registry error, the bundled `frontend/.npmrc` pins the public npm registry.
 
-Vite proxies `/api` to the backend on port 8000, so run both together.
+---
 
-> If `npm install` fails with `ENOTFOUND` against a corporate registry, the included `frontend/.npmrc` pins the public npm registry (`registry.npmjs.org`).
+## 🧭 The screens
 
-### The four screens
+| | Screen | What it shows |
+| --- | --- | --- |
+| 🎬 | **Judge Mode** | Memory ON vs OFF, the full learning loop in 60s |
+| 🚨 | **Investigate** | Paste an incident → similar cases, recommendation, feedback |
+| 🕸️ | **Memory Graph** | How incidents, services, and root causes connect |
+| 🔮 | **Patterns** | Recurring failure patterns + deployment risk |
+| 🧠 | **Memory** | Everything Hindsight remembers |
+| 📈 | **Learning** | How recommendations improve as memory grows |
+| 📋 | **History** | Every investigation and its outcome |
 
-- **🚨 Investigate** — paste an incident; see similar past incidents (with
-  similarity %), the AI recommendation, investigation steps, and
-  This Worked / Didn't Work feedback (successful outcomes are retained back
-  into Hindsight).
-- **🧠 Memory** — everything remembered in Hindsight.
-- **📈 Learning** — how the agent improves as memory grows.
-- **📋 History** — every investigation and its reported outcome.
+---
 
-## Roadmap
+## 🛠️ Tech stack
 
-- **Phase 1** — Python project, Groq + Hindsight connected, first response ✅
-- **Phase 2** — Incident data model, synthetic incidents, better memory structure
-- **Phase 3** — Agent workflow, resolution feedback, learning loop
-- **Phase 4** — FastAPI REST APIs ✅
-- **Phase 5** — Frontend incident dashboard ✅
-- **Phase 6** — Demo mode (before memory / after memory)
-- **Phase 7** — Docker, GitHub, deployment
-- **Phase 8** — 60-second demo video + README polish
+**Hindsight** (long-term memory) · **Groq** (LLM reasoning) · **FastAPI** (Python API) · **React + Vite + TypeScript** (UI)
