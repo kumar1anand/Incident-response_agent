@@ -8,9 +8,21 @@
 
 ## 🎥 Demo
 
-https://github.com/kumar1anand/incidentiq/raw/main/images/Screen%20Recording%202026-09-28%20195553.mp4
+▶️ **Click to watch the walkthrough:**
 
-<sub>▶️ Full walkthrough: [Judge Mode demo](images/Screen%20Recording%202026-09-28%20195553.mp4) · [Feature tour](images/Screen%20Recording%202026-09-28%20195705.mp4)</sub>
+[![Watch the IncidentIQ demo](images/Screenshot%202026-09-28%20195727.png)](images/Screen%20Recording%202026-09-28%20195553.mp4)
+
+<sub>Videos: [Judge Mode demo](images/Screen%20Recording%202026-09-28%20195553.mp4) · [Feature tour](images/Screen%20Recording%202026-09-28%20195705.mp4)</sub>
+
+<!--
+  Want the video to PLAY INLINE on GitHub (not just a thumbnail link)?
+  GitHub only auto-embeds videos uploaded through its web UI. To enable it:
+    1. Open this README on github.com and click the pencil (Edit) icon.
+    2. Drag "images/Screen Recording 2026-09-28 195553.mp4" into the editor.
+    3. GitHub inserts a user-images.githubusercontent.com URL that plays inline.
+    4. Replace the thumbnail line above with that URL and commit.
+-->
+
 
 ---
 
