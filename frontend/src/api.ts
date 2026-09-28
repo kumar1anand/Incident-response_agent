@@ -17,8 +17,16 @@ export interface Analysis {
   investigation_steps: string[];
   evidence_warning: string;
   summary: string;
+  confidence: number;
   raw_memories: string[];
+  memory_enabled: boolean;
   record_id: number;
+}
+
+export interface JudgeDemo {
+  incident: string;
+  without_memory: Analysis;
+  with_memory: Analysis;
 }
 
 export interface MemoryItem {
@@ -92,11 +100,14 @@ async function req<T>(path: string, options?: RequestInit): Promise<T> {
 export const api = {
   health: () => req<Health>("/api/health"),
 
-  investigate: (incident: string) =>
+  investigate: (incident: string, memoryEnabled = true) =>
     req<Analysis>("/api/investigate", {
       method: "POST",
-      body: JSON.stringify({ incident }),
+      body: JSON.stringify({ incident, memory_enabled: memoryEnabled }),
     }),
+
+  judgeDemo: () =>
+    req<JudgeDemo>("/api/judge-demo", { method: "POST" }),
 
   feedback: (payload: {
     record_id: number;

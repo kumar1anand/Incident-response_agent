@@ -47,6 +47,7 @@ app.add_middleware(
 
 class InvestigateRequest(BaseModel):
     incident: str
+    memory_enabled: bool = True
 
 
 class FeedbackRequest(BaseModel):
@@ -81,12 +82,45 @@ def investigate(req: InvestigateRequest):
     if not incident:
         raise HTTPException(status_code=400, detail="Incident text is required.")
 
-    analysis = investigate_incident_structured(incident)
+    analysis = investigate_incident_structured(incident, memory_enabled=req.memory_enabled)
     record = store.add_investigation(incident, analysis)
 
     # Attach the record id so the UI can send feedback later.
     analysis["record_id"] = record["id"]
     return analysis
+
+
+# The fixed incident used for the 60-second judge demonstration.
+JUDGE_INCIDENT = """
+Payment Service is returning HTTP 500 errors.
+
+Kafka consumer lag has increased significantly.
+
+The problem started shortly after deployment v2.4.1.
+
+Customer payment requests are intermittently failing.
+""".strip()
+
+
+@app.post("/api/judge-demo")
+def judge_demo():
+    """Run the same incident twice: once without memory, once with Hindsight.
+
+    Powers the Judge Mode before/after story. Returns both analyses plus the
+    incident text so the frontend can animate the contrast.
+    """
+    without_memory = investigate_incident_structured(JUDGE_INCIDENT, memory_enabled=False)
+    with_memory = investigate_incident_structured(JUDGE_INCIDENT, memory_enabled=True)
+
+    # Record the with-memory run so feedback + history reflect the demo.
+    record = store.add_investigation(JUDGE_INCIDENT, with_memory)
+    with_memory["record_id"] = record["id"]
+
+    return {
+        "incident": JUDGE_INCIDENT,
+        "without_memory": without_memory,
+        "with_memory": with_memory,
+    }
 
 
 @app.post("/api/feedback")

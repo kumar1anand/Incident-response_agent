@@ -64,12 +64,20 @@ Rules:
 - Never invent historical incidents. Only reference incidents that appear
   in the provided HISTORICAL INCIDENT MEMORY.
 - Base similarity and root causes strictly on the provided memory.
+- If memory is disabled, reason ONLY from the current incident and return an
+  empty similar_incidents list with LOW confidence.
 - Always respond with a single valid JSON object, no prose outside it.
 """
 
 
-def investigate_incident_structured(incident: str) -> dict:
+def investigate_incident_structured(incident: str, memory_enabled: bool = True) -> dict:
     """Analyze an incident and return structured data for the UI.
+
+    Args:
+        incident: the incident description.
+        memory_enabled: when True, Hindsight memory is recalled and used.
+            When False, the agent reasons only from the current incident and
+            must NOT reference or invent historical incidents.
 
     Returns a dict with:
         similar_incidents: [{id, similarity, service, root_cause,
@@ -79,9 +87,15 @@ def investigate_incident_structured(incident: str) -> dict:
         investigation_steps: [str]
         evidence_warning: str
         summary: str
+        confidence: int (0-100)
         raw_memories: [str]   (the actual recalled memory texts)
+        memory_enabled: bool
     """
-    memories, historical_context = _recall_memories(incident)
+    if memory_enabled:
+        memories, historical_context = _recall_memories(incident)
+    else:
+        memories = []
+        historical_context = "(memory disabled for this investigation)"
 
     prompt = f"""
 A new production incident has occurred.
@@ -90,12 +104,18 @@ NEW INCIDENT:
 {incident}
 
 
-HISTORICAL INCIDENT MEMORY (the only incidents you may reference):
+HISTORICAL INCIDENT MEMORY:
+
 {historical_context}
 
+IMPORTANT:
+Hindsight memory is currently {"ENABLED" if memory_enabled else "DISABLED"} for this investigation.
+If memory is disabled, do NOT reference historical incidents. Do NOT invent
+incident IDs, similarity percentages, previous root causes, or previous
+resolutions.
 
-Analyze the new incident against the historical memory and return a JSON
-object with EXACTLY this shape:
+
+Analyze the new incident and return a JSON object with EXACTLY this shape:
 
 {{
   "similar_incidents": [
@@ -111,13 +131,19 @@ object with EXACTLY this shape:
   "recommendation": "your single best recommendation as a short paragraph",
   "investigation_steps": ["step 1", "step 2", "..."],
   "evidence_warning": "a warning if historical evidence is weak or insufficient, else empty string",
-  "summary": "one-sentence summary of the likely root cause"
+  "summary": "one-sentence summary of the likely root cause",
+  "confidence": 0-100
 }}
 
 - similarity is your estimated percentage match (integer).
 - Order similar_incidents by similarity descending.
-- If no relevant incidents exist in memory, return an empty similar_incidents
-  list and set evidence_warning accordingly.
+- confidence is how confident you are in the root cause (integer 0-100).
+  Without historical evidence, confidence should be LOW (typically 30-55).
+- If memory is disabled, similar_incidents MUST be [].
+- If memory is disabled, evidence_warning MUST say exactly:
+  "Hindsight memory was disabled for this investigation."
+- If memory is enabled but no relevant incidents exist, return an empty
+  similar_incidents list and set evidence_warning accordingly.
 """
 
     raw = generate_json(prompt, system=STRUCTURED_SYSTEM_PROMPT)
@@ -132,17 +158,27 @@ object with EXACTLY this shape:
             "investigation_steps": [],
             "evidence_warning": "Response could not be parsed as structured data.",
             "summary": "",
+            "confidence": 0,
         }
 
     # Normalize + enrich.
     similar = data.get("similar_incidents") or []
-    data["similar_incidents"] = similar
-    data["similar_count"] = len(similar)
     data.setdefault("recommendation", "")
     data.setdefault("investigation_steps", [])
     data.setdefault("evidence_warning", "")
     data.setdefault("summary", "")
+    data.setdefault("confidence", 0)
+
+    # Hard guard: when memory is off, never leak invented incidents even if the
+    # model ignored the instruction.
+    if not memory_enabled:
+        similar = []
+        data["evidence_warning"] = "Hindsight memory was disabled for this investigation."
+
+    data["similar_incidents"] = similar
+    data["similar_count"] = len(similar)
     data["raw_memories"] = memories
+    data["memory_enabled"] = memory_enabled
 
     return data
 

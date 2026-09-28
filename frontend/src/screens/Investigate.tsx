@@ -11,6 +11,7 @@ export default function Investigate() {
   const [error, setError] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [feedbackSent, setFeedbackSent] = useState<"worked" | "didnt_work" | null>(null);
+  const [memoryEnabled, setMemoryEnabled] = useState(true);
 
   async function investigate() {
     setLoading(true);
@@ -18,7 +19,7 @@ export default function Investigate() {
     setAnalysis(null);
     setFeedbackSent(null);
     try {
-      const result = await api.investigate(incident);
+      const result = await api.investigate(incident, memoryEnabled);
       setAnalysis(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Investigation failed.");
@@ -79,7 +80,26 @@ export default function Investigate() {
           >
             Reset sample
           </button>
+
+          <div className="mem-toggle">
+            <span className="mem-toggle-label">Hindsight Memory</span>
+            <button
+              className={`toggle ${memoryEnabled ? "on" : "off"}`}
+              onClick={() => setMemoryEnabled((v) => !v)}
+              disabled={loading}
+              role="switch"
+              aria-checked={memoryEnabled}
+            >
+              <span className="toggle-knob" />
+              <span className="toggle-text">{memoryEnabled ? "ON" : "OFF"}</span>
+            </button>
+          </div>
         </div>
+        <p className="mem-toggle-hint muted">
+          {memoryEnabled
+            ? "ON: the agent recalls and learns from historical incidents."
+            : "OFF: the agent reasons only from the current incident."}
+        </p>
       </section>
 
       {error && <div className="error-banner">{error}</div>}

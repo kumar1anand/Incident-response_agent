@@ -1,12 +1,14 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { api, type Health } from "./api";
+import JudgeMode from "./screens/JudgeMode";
 import Investigate from "./screens/Investigate";
 import Memory from "./screens/Memory";
 import Learning from "./screens/Learning";
 import History from "./screens/History";
 
 const NAV = [
+  { to: "/judge", label: "Judge Mode", icon: "🎬" },
   { to: "/investigate", label: "Investigate", icon: "🚨" },
   { to: "/memory", label: "Memory", icon: "🧠" },
   { to: "/learning", label: "Learning", icon: "📈" },
@@ -65,7 +67,8 @@ export default function App() {
 
       <main className="content">
         <Routes>
-          <Route path="/" element={<Navigate to="/investigate" replace />} />
+          <Route path="/" element={<Navigate to="/judge" replace />} />
+          <Route path="/judge" element={<JudgeMode />} />
           <Route path="/investigate" element={<Investigate />} />
           <Route path="/memory" element={<Memory />} />
           <Route path="/learning" element={<Learning />} />

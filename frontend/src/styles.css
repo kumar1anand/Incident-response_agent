@@ -556,3 +556,336 @@ code {
   font-size: 14px;
   margin-bottom: 16px;
 }
+
+/* ---------- Memory toggle (Investigate) ---------- */
+.mem-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.mem-toggle-label {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 84px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elev);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.toggle .toggle-knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  transition: all 0.2s ease;
+}
+.toggle .toggle-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.toggle.on {
+  background: #34d39918;
+  border-color: var(--ok);
+}
+.toggle.on .toggle-knob {
+  background: var(--ok);
+  box-shadow: 0 0 10px var(--ok);
+  transform: translateX(46px);
+  position: absolute;
+  left: 8px;
+}
+.toggle.on .toggle-text {
+  color: var(--ok);
+  margin-left: 2px;
+}
+.toggle.off .toggle-text {
+  margin-left: auto;
+  margin-right: 2px;
+}
+.mem-toggle-hint {
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* ---------- Judge Mode ---------- */
+.judge-hero {
+  text-align: center;
+  padding: 48px 32px;
+}
+.judge-hero-icon {
+  font-size: 56px;
+  margin-bottom: 10px;
+}
+.judge-hero h2 {
+  margin: 6px 0;
+  font-size: 24px;
+}
+.judge-run {
+  margin-top: 22px;
+  font-size: 16px;
+  padding: 14px 28px;
+}
+
+.judge-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.judge-step {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 600;
+}
+.judge-step .js-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg-elev);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+.judge-step.active {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.judge-step.active .js-dot {
+  background: var(--accent);
+  color: #04101f;
+}
+.judge-step.done {
+  color: var(--ok);
+  border-color: #34d39955;
+}
+.judge-step.done .js-dot {
+  background: var(--ok);
+  color: #04101f;
+}
+
+.judge-card {
+  padding: 22px 24px;
+}
+.judge-card.off {
+  border-left: 3px solid var(--bad);
+}
+.judge-card.on {
+  border-left: 3px solid var(--ok);
+}
+.judge-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.mem-state {
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+}
+.mem-state.off {
+  color: var(--bad);
+}
+.mem-state.on {
+  color: var(--ok);
+}
+.step-tag {
+  font-size: 12px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.judge-incident {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  margin: 0;
+}
+.judge-meta-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.pill-flat {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  border: 1px solid var(--border-strong);
+}
+.pill-strong {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #34d39918;
+  color: var(--ok);
+  border: 1px solid var(--ok);
+}
+
+.judge-transition {
+  text-align: center;
+  padding: 40px 24px;
+}
+.big-on {
+  font-size: 20px;
+  margin-bottom: 24px;
+  animation: pulse 1.2s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.recall-list {
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.recall-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-faint);
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+.recall-item.done {
+  color: var(--ok);
+}
+.ri-mark {
+  font-weight: 700;
+}
+
+.why-block {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+.why-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+.why-list {
+  margin: 0;
+  padding-left: 4px;
+  list-style: none;
+  line-height: 1.9;
+  color: var(--ok);
+  font-size: 14px;
+}
+
+.judge-learned {
+  text-align: center;
+  padding: 40px 24px;
+  border: 1px solid #34d39955;
+}
+.learned-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+.judge-learned h2 {
+  color: var(--ok);
+  margin: 4px 0 18px;
+}
+.learned-list {
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.learned-list .ll {
+  color: var(--text-faint);
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+.learned-list .ll.done {
+  color: var(--ok);
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.impact-col {
+  padding: 20px;
+}
+.impact-col.off {
+  border-top: 3px solid var(--bad);
+}
+.impact-col.on {
+  border-top: 3px solid var(--ok);
+}
+.impact-head {
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.impact-col.off .impact-head {
+  color: var(--bad);
+}
+.impact-col.on .impact-head {
+  color: var(--ok);
+}
+.impact-col ul {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.9;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+.judge-closer {
+  margin-top: 16px;
+  padding: 22px;
+  text-align: center;
+  font-size: 18px;
+  color: var(--text);
+  border: 1px solid var(--accent);
+  background: var(--accent-glow);
+}
+.judge-closer strong {
+  color: var(--accent);
+}
+
+@media (max-width: 720px) {
+  .impact-grid {
+    grid-template-columns: 1fr;
+  }
+}
