@@ -198,7 +198,7 @@ function MemoryOffStep({
 
       <div className="judge-meta-row">
         <span className="pill-flat">Historical evidence: NONE</span>
-        <span className="pill-flat">Confidence: {analysis.confidence || "LOW"}%</span>
+        <span className="pill-flat">Confidence: {formatConfidence(analysis.confidence)}</span>
       </div>
       <div className="warning">🔴 Memory disabled — no historical incidents available.</div>
 
@@ -257,7 +257,7 @@ function MemoryOnStep({ analysis, onNext }: { analysis: Analysis; onNext: () => 
       ))}
 
       <div className="card reco" style={{ marginTop: 8 }}>
-        <div className="section-label">🤖 IncidentIQ Recommendation</div>
+        <div className="section-label">🤖 IncidentDeepDig Recommendation</div>
         <p className="reco-text">{analysis.recommendation}</p>
 
         <div className="why-block">
@@ -275,7 +275,7 @@ function MemoryOnStep({ analysis, onNext }: { analysis: Analysis; onNext: () => 
         </div>
 
         <div className="judge-meta-row">
-          <span className="pill-strong">Confidence: {analysis.confidence || 85}%</span>
+          <span className="pill-strong">Confidence: {formatConfidence(analysis.confidence)}</span>
         </div>
       </div>
 
@@ -299,7 +299,7 @@ function SimilarCard({ inc }: { inc: SimilarIncident }) {
           <span className="sim-bar">
             <span className="sim-fill" style={{ width: `${sim}%` }} />
           </span>
-          {sim}% similar
+          {sim}% estimated match
         </span>
       </div>
       {inc.root_cause && (
@@ -322,6 +322,11 @@ function SimilarCard({ inc }: { inc: SimilarIncident }) {
       )}
     </div>
   );
+}
+
+function formatConfidence(confidence?: number | null): string {
+  if (typeof confidence !== "number" || !Number.isFinite(confidence)) return "Unavailable";
+  return `${Math.max(0, Math.min(100, Math.round(confidence)))}%`;
 }
 
 /* ---------- Step 3: feedback ---------- */
@@ -381,7 +386,7 @@ function ImpactStep({
             <li>Generic troubleshooting</li>
             <li>No historical evidence</li>
             <li>No previous resolution</li>
-            <li>Confidence: {without.confidence || "LOW"}%</li>
+            <li>Confidence: {formatConfidence(without.confidence)}</li>
           </ul>
         </div>
         <div className="card impact-col on">
@@ -390,7 +395,7 @@ function ImpactStep({
             <li>{withMem.similar_count} relevant incidents recalled</li>
             <li>Previous root cause identified</li>
             <li>Previous successful resolution reused</li>
-            <li>Confidence: {withMem.confidence || 85}%</li>
+            <li>Confidence: {formatConfidence(withMem.confidence)}</li>
           </ul>
         </div>
       </div>

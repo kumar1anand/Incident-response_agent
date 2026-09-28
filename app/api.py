@@ -1,4 +1,4 @@
-"""IncidentIQ FastAPI backend.
+"""IncidentDeepDig FastAPI backend.
 
 Exposes the agent + memory operations as REST endpoints for the React UI.
 
@@ -7,6 +7,7 @@ Run with:
 """
 
 import sys
+import hashlib
 
 # LLM/memory output can contain Unicode; force UTF-8 so logging on Windows
 # consoles doesn't crash.
@@ -32,12 +33,12 @@ from app.incident_agent import (
 )
 from app.memory import hindsight, BANK_ID
 
-app = FastAPI(title="IncidentIQ API", version="1.0.0")
+app = FastAPI(title="IncidentDeepDig API", version="1.0.0")
 
 # Allow the Vite dev server (and any local origin) to call the API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -132,7 +133,7 @@ async def judge_demo():
 
 @app.post("/api/feedback")
 async def feedback(req: FeedbackRequest):
-    """Record engineer feedback and, when it worked, retain it into memory."""
+    """Record engineer feedback and retain either outcome into Hindsight."""
     if req.feedback not in ("worked", "didnt_work"):
         raise HTTPException(status_code=400, detail="Invalid feedback value.")
 
@@ -140,32 +141,41 @@ async def feedback(req: FeedbackRequest):
     if record is None:
         raise HTTPException(status_code=404, detail="Investigation record not found.")
 
-    # Close the learning loop: retain successful outcomes into Hindsight.
-    if req.feedback == "worked":
-        content = f"""
-Incident resolution feedback.
+    # Retain both positive and negative experiences so recall can guide future
+    # recommendations away from remediations that failed in similar incidents.
+    outcome = "SUCCESS" if req.feedback == "worked" else "FAILURE"
+    outcome_detail = (
+        "The remediation resolved the incident."
+        if req.feedback == "worked"
+        else "The remediation did NOT resolve the incident. Avoid blindly repeating this remediation for similar incidents."
+    )
+    content = f"""
+Incident remediation feedback.
 
 Incident:
 {req.incident or record.get("incident", "")}
 
 Root Cause:
-{req.root_cause or "As diagnosed by IncidentIQ."}
+{req.root_cause or "As diagnosed by IncidentDeepDig."}
 
 Resolution:
 {req.resolution or record.get("recommendation", "")}
 
 Engineer feedback:
-The recommendation was successful.
+{"The recommendation worked." if req.feedback == "worked" else "The recommendation did not work."}
 
 Outcome:
-Successfully resolved.
+{outcome}
+{outcome_detail}
 """.strip()
-        try:
-            await record_resolution_async(content)
-            record["retained"] = True
-        except Exception as exc:  # noqa: BLE001
-            record["retained"] = False
-            record["retain_error"] = str(exc)
+    try:
+        content_key = " ".join(content.split()).casefold()
+        operation_id = "feedback-" + hashlib.sha256(content_key.encode("utf-8")).hexdigest()
+        await record_resolution_async(content, operation_id=operation_id)
+        record["retained"] = True
+    except Exception as exc:  # noqa: BLE001
+        record["retained"] = False
+        record["retain_error"] = str(exc)
 
     return record
 
@@ -238,18 +248,18 @@ def learning():
 
 
 @app.get("/api/graph")
-def graph():
-    """Knowledge graph of services, incidents, categories for the Memory Graph."""
-    return insights.build_graph()
+async def graph():
+    """Knowledge graph built from retained Hindsight memories."""
+    return (await insights.get_snapshot())["graph"]
 
 
 @app.get("/api/patterns")
-def patterns():
-    """Recurring incident patterns + deployment-correlation risk."""
-    return insights.discover_patterns()
+async def patterns():
+    """Recurring incident patterns derived from retained Hindsight memories."""
+    return (await insights.get_snapshot())["patterns"]
 
 
 @app.get("/api/metrics")
-def metrics():
-    """Aggregate metrics for charts (severity mix, per-service, learning curve)."""
-    return insights.compute_metrics()
+async def metrics():
+    """Aggregate metrics derived from retained Hindsight memories."""
+    return (await insights.get_snapshot())["metrics"]

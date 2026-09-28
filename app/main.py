@@ -1,4 +1,4 @@
-"""IncidentIQ entry point (Phase 1 CLI test).
+"""IncidentDeepDig command-line investigation entry point.
 
 Run with:
     python -m app.main
@@ -36,7 +36,7 @@ def main() -> None:
 
     print("\n")
     print("=" * 80)
-    print("INCIDENTIQ ANALYSIS")
+    print("INCIDENTDEEPDIG ANALYSIS")
     print("=" * 80)
     print(response)
 

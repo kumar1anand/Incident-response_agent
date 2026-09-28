@@ -23,24 +23,51 @@ export default function Learning() {
       <div className="page-head">
         <h1 className="page-title">📈 Agent Learning</h1>
         <p className="page-desc">
-          How IncidentIQ improves as it accumulates memory. Each investigation
-          draws on more recalled incidents and successful resolutions.
+          How IncidentDeepDig improves as it accumulates memory. Each investigation
+          draws on accumulated incident memories and both successful and failed remediation outcomes.
         </p>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
+      {metrics && !metrics.available && (
+        <div className="error-banner">{metrics.error || "Hindsight metrics are unavailable."}</div>
+      )}
 
-      {metrics && (
+      {metrics && (metrics.available || metrics.learning_curve.length > 0) && (
         <div className="chart-grid2">
           <div className="card chart-card">
             <div className="section-label">Recall growth (per investigation)</div>
             <LineChart points={metrics.learning_curve} />
           </div>
           <div className="card chart-card">
-            <div className="section-label">Incidents by service</div>
+            <div className="section-label">Remembered incidents by service</div>
             <BarChart data={metrics.by_service} />
           </div>
         </div>
+      )}
+
+      {metrics?.available && metrics.total_incidents > 0 && (
+        <>
+          <div className="section-label">Hindsight memory outcomes</div>
+          <div className="stat-row">
+            <div className="card stat">
+              <div className="num">{metrics.total_incidents}</div>
+              <div className="lbl">Incident experiences</div>
+            </div>
+            <div className="card stat">
+              <div className="num">{metrics.outcomes.success}</div>
+              <div className="lbl">Successful remediations</div>
+            </div>
+            <div className="card stat">
+              <div className="num">{metrics.outcomes.failure}</div>
+              <div className="lbl">Failed remediations</div>
+            </div>
+            <div className="card stat">
+              <div className="num">{metrics.outcomes.unknown}</div>
+              <div className="lbl">Outcome not recorded</div>
+            </div>
+          </div>
+        </>
       )}
 
       {loading ? (

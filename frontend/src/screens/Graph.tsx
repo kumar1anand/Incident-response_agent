@@ -15,18 +15,21 @@ const TYPE_COLOR: Record<string, string> = {
   category: "#a78bfa",
   service: "#4f8cff",
   incident: "#34d399",
+  remediation: "#fbbf24",
 };
 
 export default function Graph() {
   const [data, setData] = useState<GraphResponse | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const [hover, setHover] = useState<string | null>(null);
 
   useEffect(() => {
     api
       .graph()
       .then(setData)
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load graph."));
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load graph."))
+      .finally(() => setLoading(false));
   }, []);
 
   const layout = useMemo(() => {
@@ -35,6 +38,7 @@ export default function Graph() {
     const categories = data.nodes.filter((n) => n.type === "category");
     const services = data.nodes.filter((n) => n.type === "service");
     const incidents = data.nodes.filter((n) => n.type === "incident");
+    const remediations = data.nodes.filter((n) => n.type === "remediation");
 
     const pos: Record<string, Positioned> = {};
 
@@ -48,6 +52,11 @@ export default function Graph() {
     services.forEach((n, i) => {
       const a = (2 * Math.PI * i) / Math.max(services.length, 1) - Math.PI / 2 + 0.3;
       pos[n.id] = { ...n, x: CX + Math.cos(a) * 270, y: CY + Math.sin(a) * 270 };
+    });
+
+    remediations.forEach((n, i) => {
+      const a = (2 * Math.PI * i) / Math.max(remediations.length, 1) - Math.PI / 2 + 0.15;
+      pos[n.id] = { ...n, x: CX + Math.cos(a) * 330, y: CY + Math.sin(a) * 265 };
     });
 
     // Incidents: clustered near their category node.
@@ -84,22 +93,29 @@ export default function Graph() {
       <div className="page-head">
         <h1 className="page-title">🕸️ Memory Graph</h1>
         <p className="page-desc">
-          How IncidentIQ's knowledge connects: incidents link to the services
+          How IncidentDeepDig's knowledge connects: incidents link to the services
           they hit and the root-cause families they belong to. Hover a node to
           trace its relationships.
         </p>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      {(error || (data && !data.available)) && (
+        <div className="error-banner">{error || data?.error || "Hindsight insights are unavailable."}</div>
+      )}
 
       <div className="graph-legend">
         <span><i style={{ background: TYPE_COLOR.category }} /> Root-cause family</span>
         <span><i style={{ background: TYPE_COLOR.service }} /> Service</span>
         <span><i style={{ background: TYPE_COLOR.incident }} /> Incident</span>
+        <span><i style={{ background: TYPE_COLOR.remediation }} /> Remediation</span>
       </div>
 
-      {!data ? (
+      {loading ? (
         <div className="empty"><div className="big">🕸️</div>Building graph…</div>
+      ) : !data || !data.available ? (
+        <div className="empty">Graph data needs available Hindsight memory.</div>
+      ) : data.nodes.length === 0 ? (
+        <div className="empty">No incident experiences found in Hindsight memory yet.</div>
       ) : (
         <div className="card graph-wrap">
           <svg viewBox={`0 0 ${W} ${H}`} className="graph-svg">
@@ -171,6 +187,12 @@ function NodeDetail({ node }: { node: Positioned | null | undefined }) {
           <span>Service: {node.service}</span>
           <span>Severity: {node.severity}</span>
           <span>Category: {node.category}</span>
+        </div>
+      )}
+      {node.type === "remediation" && node.outcomes && (
+        <div className="gd-meta">
+          <span>SUCCESS: {node.outcomes.SUCCESS ?? 0}</span>
+          <span>FAILURE: {node.outcomes.FAILURE ?? 0}</span>
         </div>
       )}
       {node.type !== "incident" && (

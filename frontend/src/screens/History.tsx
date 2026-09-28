@@ -19,7 +19,7 @@ export default function History() {
       <div className="page-head">
         <h1 className="page-title">📋 Incident History</h1>
         <p className="page-desc">
-          Every incident investigated by IncidentIQ, with the outcome the
+          Every incident investigated by IncidentDeepDig, with the outcome the
           engineer reported.
         </p>
       </div>

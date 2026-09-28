@@ -1,7 +1,7 @@
 """Smoke test: store (retain) a first incident in Hindsight.
 
 Run with:
-    python app/test_hindsight.py
+    python scripts/retain_sample_hindsight.py
 """
 
 from dotenv import load_dotenv

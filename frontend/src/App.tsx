@@ -36,8 +36,8 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-logo">🚨</span>
-          <span className="brand-name">IncidentIQ</span>
-          <span className="brand-sub">Incident Command Center</span>
+          <span className="brand-name">IncidentDeepDig</span>
+          <span className="brand-sub">AI Incident Response Agent with Persistent Hindsight Memory</span>
         </div>
         <div className={`status-pill ${healthy ? "ok" : "bad"}`}>
           <span className="dot" />

@@ -1,6 +1,7 @@
 [
   {
     "id": "INC-001",
+    "occurred_start": "2026-08-25T07:13:00Z",
     "service": "payment-service",
     "severity": "SEV-2",
     "category": "Kafka consumer rebalance",
@@ -14,6 +15,7 @@
   },
   {
     "id": "INC-002",
+    "occurred_start": "2026-08-26T14:26:00Z",
     "service": "auth-service",
     "severity": "SEV-2",
     "category": "Redis connection pool exhaustion",
@@ -27,6 +29,7 @@
   },
   {
     "id": "INC-003",
+    "occurred_start": "2026-08-27T21:39:00Z",
     "service": "payment-service",
     "severity": "SEV-2",
     "category": "Kafka consumer rebalance",
@@ -40,6 +43,7 @@
   },
   {
     "id": "INC-004",
+    "occurred_start": "2026-08-28T04:52:00Z",
     "service": "search-service",
     "severity": "SEV-3",
     "category": "Elasticsearch unassigned shards",
@@ -53,6 +57,7 @@
   },
   {
     "id": "INC-005",
+    "occurred_start": "2026-08-29T11:05:00Z",
     "service": "payment-service",
     "severity": "SEV-1",
     "category": "Kafka consumer rebalance",
@@ -66,6 +71,7 @@
   },
   {
     "id": "INC-006",
+    "occurred_start": "2026-08-30T18:18:00Z",
     "service": "order-service",
     "severity": "SEV-2",
     "category": "Database connection pool exhaustion",
@@ -79,6 +85,7 @@
   },
   {
     "id": "INC-007",
+    "occurred_start": "2026-08-31T01:31:00Z",
     "service": "api-gateway",
     "severity": "SEV-2",
     "category": "HTTP 502 upstream failure",
@@ -92,6 +99,7 @@
   },
   {
     "id": "INC-008",
+    "occurred_start": "2026-09-01T08:44:00Z",
     "service": "notification-service",
     "severity": "SEV-3",
     "category": "Third-party API timeout",
@@ -105,6 +113,7 @@
   },
   {
     "id": "INC-009",
+    "occurred_start": "2026-09-02T15:57:00Z",
     "service": "payment-service",
     "severity": "SEV-2",
     "category": "Kafka consumer rebalance",
@@ -118,6 +127,7 @@
   },
   {
     "id": "INC-010",
+    "occurred_start": "2026-09-03T22:10:00Z",
     "service": "user-service",
     "severity": "SEV-3",
     "category": "Memory leak",
@@ -131,6 +141,7 @@
   },
   {
     "id": "INC-011",
+    "occurred_start": "2026-09-04T05:23:00Z",
     "service": "auth-service",
     "severity": "SEV-1",
     "category": "Redis connection pool exhaustion",
@@ -144,6 +155,7 @@
   },
   {
     "id": "INC-012",
+    "occurred_start": "2026-09-05T12:36:00Z",
     "service": "order-service",
     "severity": "SEV-2",
     "category": "Database connection pool exhaustion",
@@ -157,6 +169,7 @@
   },
   {
     "id": "INC-013",
+    "occurred_start": "2026-09-06T19:49:00Z",
     "service": "search-service",
     "severity": "SEV-3",
     "category": "Elasticsearch unassigned shards",
@@ -170,6 +183,7 @@
   },
   {
     "id": "INC-014",
+    "occurred_start": "2026-09-07T02:02:00Z",
     "service": "api-gateway",
     "severity": "SEV-2",
     "category": "HTTP 502 upstream failure",
@@ -183,6 +197,7 @@
   },
   {
     "id": "INC-015",
+    "occurred_start": "2026-09-08T09:15:00Z",
     "service": "payment-service",
     "severity": "SEV-2",
     "category": "Kafka consumer rebalance",
@@ -196,6 +211,7 @@
   },
   {
     "id": "INC-016",
+    "occurred_start": "2026-09-09T16:28:00Z",
     "service": "inventory-service",
     "severity": "SEV-3",
     "category": "Third-party API timeout",
@@ -209,6 +225,7 @@
   },
   {
     "id": "INC-017",
+    "occurred_start": "2026-09-10T23:41:00Z",
     "service": "user-service",
     "severity": "SEV-2",
     "category": "CPU saturation",
@@ -222,6 +239,7 @@
   },
   {
     "id": "INC-018",
+    "occurred_start": "2026-09-11T06:54:00Z",
     "service": "order-service",
     "severity": "SEV-2",
     "category": "Database connection pool exhaustion",
@@ -235,6 +253,7 @@
   },
   {
     "id": "INC-019",
+    "occurred_start": "2026-09-12T13:07:00Z",
     "service": "notification-service",
     "severity": "SEV-4",
     "category": "Third-party API timeout",
@@ -248,6 +267,7 @@
   },
   {
     "id": "INC-020",
+    "occurred_start": "2026-09-13T20:20:00Z",
     "service": "auth-service",
     "severity": "SEV-2",
     "category": "Redis connection pool exhaustion",
@@ -261,6 +281,7 @@
   },
   {
     "id": "INC-021",
+    "occurred_start": "2026-09-14T03:33:00Z",
     "service": "payment-service",
     "severity": "SEV-1",
     "category": "Kafka consumer rebalance",
@@ -274,6 +295,7 @@
   },
   {
     "id": "INC-022",
+    "occurred_start": "2026-09-15T10:46:00Z",
     "service": "search-service",
     "severity": "SEV-3",
     "category": "Elasticsearch unassigned shards",
@@ -287,6 +309,7 @@
   },
   {
     "id": "INC-023",
+    "occurred_start": "2026-09-16T17:59:00Z",
     "service": "api-gateway",
     "severity": "SEV-2",
     "category": "HTTP 502 upstream failure",
@@ -300,6 +323,7 @@
   },
   {
     "id": "INC-024",
+    "occurred_start": "2026-09-17T00:12:00Z",
     "service": "user-service",
     "severity": "SEV-3",
     "category": "Memory leak",
@@ -313,6 +337,7 @@
   },
   {
     "id": "INC-025",
+    "occurred_start": "2026-09-18T07:25:00Z",
     "service": "inventory-service",
     "severity": "SEV-2",
     "category": "DNS resolution failure",
@@ -326,6 +351,7 @@
   },
   {
     "id": "INC-026",
+    "occurred_start": "2026-09-19T14:38:00Z",
     "service": "payment-service",
     "severity": "SEV-2",
     "category": "Kafka consumer rebalance",
@@ -339,6 +365,7 @@
   },
   {
     "id": "INC-027",
+    "occurred_start": "2026-09-20T21:51:00Z",
     "service": "order-service",
     "severity": "SEV-3",
     "category": "Database connection pool exhaustion",
@@ -352,6 +379,7 @@
   },
   {
     "id": "INC-028",
+    "occurred_start": "2026-09-21T04:04:00Z",
     "service": "auth-service",
     "severity": "SEV-3",
     "category": "CPU saturation",
@@ -365,6 +393,7 @@
   },
   {
     "id": "INC-029",
+    "occurred_start": "2026-09-22T11:17:00Z",
     "service": "notification-service",
     "severity": "SEV-4",
     "category": "Third-party API timeout",
@@ -378,6 +407,7 @@
   },
   {
     "id": "INC-030",
+    "occurred_start": "2026-09-23T18:30:00Z",
     "service": "payment-service",
     "severity": "SEV-2",
     "category": "Kafka consumer rebalance",
@@ -391,6 +421,7 @@
   },
   {
     "id": "INC-031",
+    "occurred_start": "2026-09-24T01:43:00Z",
     "service": "search-service",
     "severity": "SEV-2",
     "category": "CPU saturation",
@@ -404,6 +435,7 @@
   },
   {
     "id": "INC-032",
+    "occurred_start": "2026-09-25T08:56:00Z",
     "service": "api-gateway",
     "severity": "SEV-1",
     "category": "HTTP 502 upstream failure",
@@ -417,6 +449,7 @@
   },
   {
     "id": "INC-033",
+    "occurred_start": "2026-09-26T15:09:00Z",
     "service": "user-service",
     "severity": "SEV-3",
     "category": "Memory leak",
@@ -430,6 +463,7 @@
   },
   {
     "id": "INC-034",
+    "occurred_start": "2026-09-27T22:22:00Z",
     "service": "inventory-service",
     "severity": "SEV-3",
     "category": "Database connection pool exhaustion",
@@ -443,6 +477,7 @@
   },
   {
     "id": "INC-035",
+    "occurred_start": "2026-09-28T05:35:00Z",
     "service": "payment-service",
     "severity": "SEV-2",
     "category": "Kafka consumer rebalance",
@@ -453,5 +488,75 @@
     "duration_minutes": 19,
     "outcome": "resolved",
     "engineer_feedback": "Restarting all pods at once caused the rebalance."
+  },
+  {
+    "id": "INC-036",
+    "occurred_start": "2026-09-02T06:45:00Z",
+    "service": "order-service",
+    "severity": "SEV-2",
+    "category": "Database connection pool exhaustion",
+    "symptoms": ["Order writes timing out", "PostgreSQL connections remain saturated after traffic falls"],
+    "root_cause": "A transaction leak kept connections checked out after request failures.",
+    "resolution": "Increased the connection pool limit and restarted the order service.",
+    "deployment": "v4.8.2",
+    "duration_minutes": 48,
+    "outcome": "FAILURE",
+    "engineer_feedback": "The pool increase and restart did not resolve the incident; leaked transactions continued exhausting connections."
+  },
+  {
+    "id": "INC-037",
+    "occurred_start": "2026-09-08T14:20:00Z",
+    "service": "search-service",
+    "severity": "SEV-2",
+    "category": "Elasticsearch mapping conflict",
+    "symptoms": ["New catalog documents fail indexing", "Search results omit recently updated products"],
+    "root_cause": "A producer began sending a keyword field as an object, conflicting with the existing index mapping.",
+    "resolution": "Cleared the application search cache and retried the indexing batch.",
+    "deployment": "v2.9.0",
+    "duration_minutes": 36,
+    "outcome": "FAILURE",
+    "engineer_feedback": "Cache clearing and retrying did not resolve indexing failures because the incompatible mapping remained."
+  },
+  {
+    "id": "INC-038",
+    "occurred_start": "2026-09-15T09:10:00Z",
+    "service": "notification-service",
+    "severity": "SEV-2",
+    "category": "Third-party API authentication failure",
+    "symptoms": ["Push notifications receive HTTP 401", "Email delivery remains healthy"],
+    "root_cause": "The push provider credential was revoked during a key rotation, but the active secret reference was not updated.",
+    "resolution": "Increased retry attempts and queue retention for provider requests.",
+    "deployment": "",
+    "duration_minutes": 64,
+    "outcome": "FAILURE",
+    "engineer_feedback": "More retries did not resolve the incident; requests continued receiving 401 until the secret reference was corrected."
+  },
+  {
+    "id": "INC-039",
+    "occurred_start": "2026-09-21T18:35:00Z",
+    "service": "auth-service",
+    "severity": "SEV-1",
+    "category": "JWT issuer configuration mismatch",
+    "symptoms": ["Valid users receive HTTP 401", "Failures began after identity-provider configuration change"],
+    "root_cause": "The configured JWT issuer URL no longer matched the issuer claim in newly issued tokens.",
+    "resolution": "Flushed the authentication service JWKS cache and restarted its pods.",
+    "deployment": "v5.1.1",
+    "duration_minutes": 29,
+    "outcome": "FAILURE",
+    "engineer_feedback": "Flushing JWKS cache and restarting pods did not resolve authentication failures; issuer configuration still mismatched."
+  },
+  {
+    "id": "INC-040",
+    "occurred_start": "2026-09-27T11:55:00Z",
+    "service": "inventory-service",
+    "severity": "SEV-2",
+    "category": "Inventory event consumer poison message",
+    "symptoms": ["Stock counts stop updating", "Consumer repeatedly restarts at the same event offset"],
+    "root_cause": "A malformed inventory event could not be deserialized and repeatedly stopped the consumer partition.",
+    "resolution": "Restarted the inventory consumers and replayed the event batch from the last checkpoint.",
+    "deployment": "",
+    "duration_minutes": 41,
+    "outcome": "FAILURE",
+    "engineer_feedback": "Restart and replay did not resolve the incident because the malformed event continued blocking the partition."
   }
 ]

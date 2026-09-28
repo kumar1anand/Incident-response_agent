@@ -51,7 +51,7 @@ export default function Investigate() {
       <div className="page-head">
         <h1 className="page-title">🚨 Investigate</h1>
         <p className="page-desc">
-          Describe the incident. IncidentIQ searches memory for similar past
+          Describe the incident. IncidentDeepDig searches memory for similar past
           incidents and recommends next steps.
         </p>
       </div>

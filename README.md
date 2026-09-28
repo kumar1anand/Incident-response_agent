@@ -1,8 +1,8 @@
-# 🚨 IncidentIQ
+# 🚨 IncidentDeepDig
 
-### An AI SRE agent that *remembers* production incidents — and gets smarter every time.
+### AI Incident Response Agent with Persistent Hindsight Memory
 
-> When production breaks, the answer is usually buried in a past incident, a Slack thread, or an old postmortem. **IncidentIQ turns that scattered history into living agent memory** using [Hindsight](https://hindsight.vectorize.io/) + [Groq](https://console.groq.com/) — so every new incident is met with evidence, not guesswork.
+> When production breaks, the answer is usually buried in a past incident, a Slack thread, or an old postmortem. **IncidentDeepDig turns that scattered history into living agent memory** using [Hindsight](https://hindsight.vectorize.io/) + [Groq](https://console.groq.com/) — so every new incident is met with evidence, not guesswork.
 
 ---
 
@@ -10,18 +10,10 @@
 
 ▶️ **Click to watch the walkthrough:**
 
-[![Watch the IncidentIQ demo](images/Screenshot%202026-09-28%20195727.png)](images/Screen%20Recording%202026-09-28%20195553.mp4)
+[![Watch the IncidentDeepDig demo](images/Screenshot%202026-09-28%20195727.png)](images/Screen%20Recording%202026-09-28%20195553.mp4)
 
 <sub>Videos: [Judge Mode demo](images/Screen%20Recording%202026-09-28%20195553.mp4) · [Feature tour](images/Screen%20Recording%202026-09-28%20195705.mp4)</sub>
 
-<!--
-  Want the video to PLAY INLINE on GitHub (not just a thumbnail link)?
-  GitHub only auto-embeds videos uploaded through its web UI. To enable it:
-    1. Open this README on github.com and click the pencil (Edit) icon.
-    2. Drag "images/Screen Recording 2026-09-28 195553.mp4" into the editor.
-    3. GitHub inserts a user-images.githubusercontent.com URL that plays inline.
-    4. Replace the thumbnail line above with that URL and commit.
--->
 
 
 ---
@@ -56,7 +48,7 @@ The headline feature: run the **same incident twice** — once with memory off, 
 | --- | --- |
 | Generic troubleshooting | 3 relevant incidents recalled |
 | No historical evidence | Previous root cause identified |
-| Confidence **35%** | Confidence **85%** |
+| Current incident only | Recalled evidence informs recommendations |
 
 ---
 
@@ -68,7 +60,7 @@ An interactive knowledge graph of everything the agent knows — incidents linke
 ![Memory Graph](images/Screenshot%202026-09-28%20195748.png)
 
 ### 🔮 Pattern Insights
-IncidentIQ mines memory for **recurring failure patterns** and **deployment risk** — so you can prevent the next outage, not just react to it. *(All numbers are computed from real data.)*
+IncidentDeepDig mines memory for **recurring failure patterns** and **deployment risk** — so you can prevent the next outage, not just react to it. *(All numbers are computed from real data.)*
 
 ![Pattern Insights](images/Screenshot%202026-09-28%20195807.png)
 
@@ -115,8 +107,8 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1      # Windows  (macOS/Linux: source .venv/bin/activate)
 pip install -r requirements.txt
 
-# 2. Keys — copy the template and add your keys
-Copy-Item .env.example .env       # macOS/Linux: cp .env.example .env
+# 2. Configure the required environment variables in a root .env file
+# Create a root .env file using the variables in the Environment section below.
 
 # 3. Seed memory with sample incidents (once)
 python -m app.load_incidents
@@ -128,13 +120,12 @@ python -m uvicorn app.api:app --port 8000
 ```bash
 # 5. Frontend (second terminal)
 cd frontend
-npm install
+npm ci
 npm run dev        # opens http://localhost:5173
 ```
 
 Keep both running — Vite proxies `/api` to the backend on port 8000.
 
-> 💡 If `npm install` hits an `ENOTFOUND` corporate-registry error, the bundled `frontend/.npmrc` pins the public npm registry.
 
 ---
 
@@ -155,3 +146,47 @@ Keep both running — Vite proxies `/api` to the backend on port 8000.
 ## 🛠️ Tech stack
 
 **Hindsight** (long-term memory) · **Groq** (LLM reasoning) · **FastAPI** (Python API) · **React + Vite + TypeScript** (UI)
+
+## Hindsight learning
+
+Hindsight stores the seed postmortems and retrieves relevant memories for each investigation. Engineer feedback is retained with the incident context and remediation: **Worked** is recorded as `SUCCESS`, and **Didn't work** as `FAILURE` with a note that the remediation did not resolve the incident. Future investigations and the Patterns, Graph, and Learning/Metrics views use those accumulated memories. Seed loading is idempotent by incident ID.
+
+## Environment
+
+Set these required values in a root `.env` file:
+
+```dotenv
+HINDSIGHT_API_KEY=your_hindsight_api_key
+GROQ_API_KEY=your_groq_api_key
+```
+
+Optional settings:
+
+```dotenv
+HINDSIGHT_API_URL=https://api.hindsight.vectorize.io
+HINDSIGHT_BANK_ID=incidentiq
+GROQ_MODEL=openai/gpt-oss-120b
+```
+
+`HINDSIGHT_BANK_ID` defaults to `incidentiq`; keep it consistent with the bank where your memories are stored. `HINDSIGHT_API_URL` and `GROQ_MODEL` have defaults shown above.
+
+## Seed data and tests
+
+Load the incidents from `data/incidents.json` into Hindsight:
+
+```bash
+python -m app.load_incidents
+```
+
+Install pytest in the active Python environment and run the backend suite from the project root:
+
+```bash
+python -m pip install pytest
+python -m pytest
+```
+
+The scripts under `scripts/` are manual Hindsight API smoke checks, not automated tests. Run them only when the Hindsight environment variables are configured.
+
+## Judge Mode
+
+Judge Mode runs the same incident with memory disabled and enabled, then lets the engineer confirm whether the recommendation worked. The outcome is retained in Hindsight so future investigations can use that feedback.

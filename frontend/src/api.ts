@@ -1,4 +1,4 @@
-// API client for the IncidentIQ backend.
+// API client for the IncidentDeepDig backend.
 // In dev, Vite proxies /api -> http://127.0.0.1:8000 (see vite.config.ts).
 
 export interface SimilarIncident {
@@ -17,7 +17,7 @@ export interface Analysis {
   investigation_steps: string[];
   evidence_warning: string;
   summary: string;
-  confidence: number;
+  confidence?: number | null;
   raw_memories: string[];
   memory_enabled: boolean;
   record_id: number;
@@ -82,11 +82,13 @@ export interface Health {
 export interface GraphNode {
   id: string;
   label: string;
-  type: "service" | "incident" | "category" | "resolution";
+  type: "service" | "incident" | "category" | "remediation";
   weight: number;
   severity?: string;
   service?: string;
   category?: string;
+  outcome?: string | null;
+  outcomes?: Record<string, number>;
 }
 
 export interface GraphEdge {
@@ -96,6 +98,8 @@ export interface GraphEdge {
 }
 
 export interface GraphResponse {
+  available: boolean;
+  error?: string;
   nodes: GraphNode[];
   edges: GraphEdge[];
 }
@@ -104,14 +108,19 @@ export interface Pattern {
   category: string;
   count: number;
   services: string[];
-  deploy_related: number;
-  deploy_pct: number;
-  avg_duration_minutes: number;
+  deploy_related: number | null;
+  deploy_pct: number | null;
+  avg_duration_minutes: number | null;
   common_resolutions: string[];
+  successful_remediations: number;
+  failed_remediations: number;
+  remediation_outcomes: { resolution: string; success: number; failure: number; unknown: number }[];
   insight: string;
 }
 
 export interface PatternsResponse {
+  available: boolean;
+  error?: string;
   total_incidents: number;
   patterns: Pattern[];
   deployment_risk: {
@@ -129,9 +138,12 @@ export interface CurvePoint {
 }
 
 export interface MetricsResponse {
+  available: boolean;
+  error?: string;
   total_incidents: number;
   severity: Record<string, number>;
   by_service: Record<string, number>;
+  outcomes: { success: number; failure: number; unknown: number };
   learning_curve: CurvePoint[];
 }
 

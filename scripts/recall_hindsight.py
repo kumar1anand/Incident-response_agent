@@ -1,7 +1,7 @@
 """Smoke test: recall relevant memories from Hindsight.
 
 Run with:
-    python app/test_recall.py
+    python scripts/recall_hindsight.py
 """
 
 from dotenv import load_dotenv

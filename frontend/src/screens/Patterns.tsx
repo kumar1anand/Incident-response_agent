@@ -4,12 +4,14 @@ import { api, type PatternsResponse } from "../api";
 export default function Patterns() {
   const [data, setData] = useState<PatternsResponse | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
       .patterns()
       .then(setData)
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load patterns."));
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load patterns."))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -17,16 +19,22 @@ export default function Patterns() {
       <div className="page-head">
         <h1 className="page-title">🔮 Pattern Insights</h1>
         <p className="page-desc">
-          IncidentIQ doesn't just recall single incidents — it mines memory for
+          IncidentDeepDig doesn't just recall single incidents — it mines memory for
           recurring failure patterns and deployment risk, so you can prevent the
           next outage.
         </p>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      {(error || (data && !data.available)) && (
+        <div className="error-banner">{error || data?.error || "Hindsight insights are unavailable."}</div>
+      )}
 
-      {!data ? (
+      {loading ? (
         <div className="empty"><div className="big">🔮</div>Analyzing memory…</div>
+      ) : !data || !data.available ? (
+        <div className="empty">Patterns need available Hindsight memory.</div>
+      ) : data.total_incidents === 0 ? (
+        <div className="empty">No incident experiences found in Hindsight memory yet.</div>
       ) : (
         <>
           {data.deployment_risk.warning && (
@@ -50,7 +58,9 @@ export default function Patterns() {
           )}
 
           <div className="section-label">Recurring patterns ({data.patterns.length})</div>
-          <div className="grid">
+          {data.patterns.length === 0 ? (
+            <div className="empty">No repeated recorded categories found in Hindsight memory yet.</div>
+          ) : <div className="grid">
             {data.patterns.map((p) => (
               <div className="card pattern-card" key={p.category}>
                 <div className="pattern-head">
@@ -59,9 +69,10 @@ export default function Patterns() {
                 </div>
 
                 <div className="pattern-stats">
-                  <Stat label="Deploy-related" value={`${p.deploy_pct}%`} accent={p.deploy_pct >= 60} />
-                  <Stat label="Avg duration" value={`${p.avg_duration_minutes}m`} />
+                  <Stat label="Deploy-related" value={p.deploy_pct === null ? "—" : `${p.deploy_pct}%`} accent={p.deploy_pct !== null && p.deploy_pct >= 60} />
+                  <Stat label="Avg duration" value={p.avg_duration_minutes === null ? "—" : `${p.avg_duration_minutes}m`} />
                   <Stat label="Services" value={String(p.services.length)} />
+                  <Stat label="Worked / failed" value={`${p.successful_remediations} / ${p.failed_remediations}`} />
                 </div>
 
                 <div className="pattern-bar">
@@ -88,9 +99,23 @@ export default function Patterns() {
                     </ul>
                   </div>
                 )}
+
+                {p.remediation_outcomes.length > 0 && (
+                  <div className="pattern-res">
+                    <div className="lbl">Remediation outcomes</div>
+                    <ul>
+                      {p.remediation_outcomes.map((r) => (
+                        <li key={r.resolution}>
+                          {r.resolution} — {r.success} success, {r.failure} failure
+                          {r.unknown ? `, ${r.unknown} unknown` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ))}
-          </div>
+          </div>}
         </>
       )}
     </div>

@@ -1,37 +1,95 @@
-"""Insight computation for graphs, patterns, and metrics.
+"""Evidence-based graph, pattern, and metric views over Hindsight memories."""
 
-All values here are derived directly from data/incidents.json plus the local
-investigation history. Nothing is fabricated: counts, rates, and correlations
-are computed from the actual seeded incidents.
-"""
-
-import json
+import re
 from collections import defaultdict
-from pathlib import Path
 
 from app import store
+from app.memory import BANK_ID, hindsight
 
-_DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "incidents.json"
-
-
-def _load_incidents() -> list[dict]:
-    if not _DATA_FILE.exists():
-        return []
-    try:
-        return json.loads(_DATA_FILE.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return []
+_PAGE_SIZE = 100
+_FIELDS = (
+    "Incident ID", "Incident", "Service", "Severity", "Category", "Deployment",
+    "Duration", "Symptoms", "Root Cause", "Resolution", "Outcome",
+    "Engineer Feedback", "Context",
+)
+_FIELD_LINE = re.compile(r"^\s*(" + "|".join(re.escape(x) for x in _FIELDS) + r"):\s*(.*)$", re.I)
 
 
-def build_graph() -> dict:
-    """Build a knowledge graph of services, incidents, categories, resolutions.
+def _parse_memory(item, index: int) -> dict | None:
+    """Parse the labeled incident and feedback formats this app retains."""
+    text = item if isinstance(item, str) else getattr(item, "text", "") or ""
+    if not text.strip():
+        return None
 
-    Node types: service, incident, category (root-cause family), resolution.
-    Edges connect incident -> service, incident -> category, category ->
-    resolution (aggregated).
-    """
-    incidents = _load_incidents()
+    fields: dict[str, list[str]] = defaultdict(list)
+    current = None
+    for line in text.splitlines():
+        match = _FIELD_LINE.match(line)
+        if match:
+            current = match.group(1).casefold()
+            fields[current].append(match.group(2).strip())
+        elif current:
+            fields[current][-1] += ("\n" if fields[current][-1] else "") + line.strip()
 
+    def value(label: str) -> str:
+        return "\n".join(v for v in fields.get(label.casefold(), []) if v).strip()
+
+    incident = value("Incident")
+    incident_id = value("Incident ID")
+    root_cause = value("Root Cause")
+    resolution = value("Resolution")
+    service = value("Service")
+    category = value("Category") or root_cause
+    outcome = None
+    failure_pattern = r"\bfailure\b|did\s+not\s+resolve|didn't\s+resolve|not\s+resolved|did\s+not\s+work|didn't\s+work|\bfailed\b"
+    success_pattern = r"\bsuccess\b|successfully\s+resolved|\bresolved\b|\bworked\b"
+    recorded_outcome = value("Outcome").casefold()
+    feedback_outcome = value("Engineer Feedback").casefold()
+    if re.search(failure_pattern, recorded_outcome):
+        outcome = "FAILURE"
+    elif re.search(success_pattern, recorded_outcome):
+        outcome = "SUCCESS"
+    elif re.search(failure_pattern, feedback_outcome):
+        outcome = "FAILURE"
+    elif re.search(success_pattern, feedback_outcome):
+        outcome = "SUCCESS"
+    elif re.search(failure_pattern, text.casefold()):
+        outcome = "FAILURE"
+    elif re.search(success_pattern, text.casefold()):
+        outcome = "SUCCESS"
+
+    # Ignore unrelated memory facts; only count a memory with incident context
+    # or an explicit incident identifier.
+    if not (incident or incident_id):
+        return None
+
+    memory_id = getattr(item, "id", None) if not isinstance(item, str) else None
+    stable_id = str(incident_id or memory_id or f"memory-{index}")
+    deployment = value("Deployment")
+    deployment_known = bool(deployment) and deployment.casefold() not in ("none", "no", "n/a")
+    deployment_labeled = any(k.casefold() == "deployment" for k in fields)
+    duration_match = re.search(r"\d+(?:\.\d+)?", value("Duration"))
+    return {
+        "id": stable_id,
+        "incident": incident or incident_id,
+        "service": service,
+        "severity": value("Severity"),
+        "category": category,
+        "root_cause": root_cause,
+        "resolution": resolution,
+        "outcome": outcome,
+        "deployment": deployment if deployment_known else "",
+        "deployment_known": deployment_labeled,
+        "duration_minutes": float(duration_match.group()) if duration_match else None,
+        "source_text": text,
+    }
+
+
+def _experience_records(memories) -> list[dict]:
+    return [record for i, item in enumerate(memories) if (record := _parse_memory(item, i))]
+
+
+def _build_graph(records: list[dict]) -> dict:
     nodes: dict[str, dict] = {}
     edges: list[dict] = []
 
@@ -40,131 +98,180 @@ def build_graph() -> dict:
             nodes[node_id] = {"id": node_id, "label": label, "type": ntype, "weight": 0, **extra}
         nodes[node_id]["weight"] += 1
 
-    for inc in incidents:
-        inc_id = inc.get("id", "?")
-        service = inc.get("service", "unknown")
-        category = inc.get("category", "uncategorized")
-        severity = inc.get("severity", "")
-
-        svc_id = f"svc:{service}"
-        cat_id = f"cat:{category}"
-        inc_node_id = f"inc:{inc_id}"
-
-        add_node(svc_id, service, "service")
-        add_node(cat_id, category, "category")
-        # incident nodes are unique; weight stays 1
-        nodes[inc_node_id] = {
-            "id": inc_node_id,
-            "label": inc_id,
+    for rec in records:
+        inc_id = f"inc:{rec['id']}"
+        nodes[inc_id] = {
+            "id": inc_id,
+            "label": rec["incident"][:80],
             "type": "incident",
             "weight": 1,
-            "severity": severity,
-            "service": service,
-            "category": category,
+            "severity": rec["severity"],
+            "service": rec["service"],
+            "category": rec["category"],
+            "outcome": rec["outcome"],
         }
+        if rec["service"]:
+            service_id = f"svc:{rec['service']}"
+            add_node(service_id, rec["service"], "service")
+            edges.append({"source": inc_id, "target": service_id, "kind": "affects"})
+        if rec["category"]:
+            category_id = f"cat:{rec['category']}"
+            add_node(category_id, rec["category"], "category")
+            edges.append({"source": inc_id, "target": category_id, "kind": "caused_by"})
+        if rec["resolution"]:
+            resolution_id = f"rem:{rec['resolution']}"
+            add_node(resolution_id, rec["resolution"], "remediation", outcomes={"SUCCESS": 0, "FAILURE": 0, "UNKNOWN": 0})
+            outcome_key = rec["outcome"] or "UNKNOWN"
+            nodes[resolution_id]["outcomes"][outcome_key] += 1
+            edges.append({
+                "source": inc_id,
+                "target": resolution_id,
+                "kind": (rec["outcome"] or "unknown").casefold(),
+            })
+    return {"available": True, "error": "", "nodes": list(nodes.values()), "edges": edges}
 
-        edges.append({"source": inc_node_id, "target": svc_id, "kind": "affects"})
-        edges.append({"source": inc_node_id, "target": cat_id, "kind": "caused_by"})
 
-    return {"nodes": list(nodes.values()), "edges": edges}
-
-
-def discover_patterns() -> dict:
-    """Find recurring root-cause categories and deployment correlation."""
-    incidents = _load_incidents()
-    total = len(incidents)
-
-    by_category: dict[str, list[dict]] = defaultdict(list)
-    for inc in incidents:
-        by_category[inc.get("category", "uncategorized")].append(inc)
+def _discover_patterns(records: list[dict]) -> dict:
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for rec in records:
+        if rec["category"]:
+            groups[rec["category"]].append(rec)
 
     patterns = []
-    for category, incs in by_category.items():
-        count = len(incs)
-        if count < 2:
-            continue  # a pattern needs repetition
-        deploy_related = sum(1 for i in incs if i.get("deployment"))
-        services = sorted({i.get("service", "unknown") for i in incs})
-        resolutions = sorted({i.get("resolution", "") for i in incs if i.get("resolution")})
-        avg_duration = round(
-            sum(i.get("duration_minutes", 0) for i in incs) / count, 1
-        )
-        deploy_pct = round(100 * deploy_related / count) if count else 0
-
-        insight = ""
-        if deploy_pct >= 60:
-            insight = (
-                f"{deploy_pct}% of '{category}' incidents occurred shortly after a "
-                f"deployment — strongly deployment-correlated."
-            )
-        elif deploy_pct > 0:
-            insight = f"{deploy_pct}% of '{category}' incidents followed a deployment."
-        else:
-            insight = f"'{category}' incidents were not deployment-related."
-
-        patterns.append(
-            {
-                "category": category,
-                "count": count,
-                "services": services,
-                "deploy_related": deploy_related,
-                "deploy_pct": deploy_pct,
-                "avg_duration_minutes": avg_duration,
-                "common_resolutions": resolutions[:3],
-                "insight": insight,
-            }
-        )
-
+    for category, experiences in groups.items():
+        if len(experiences) < 2:
+            continue
+        deploy_known = [r for r in experiences if r["deployment_known"]]
+        successful = sum(r["outcome"] == "SUCCESS" for r in experiences)
+        failed = sum(r["outcome"] == "FAILURE" for r in experiences)
+        services = sorted({r["service"] for r in experiences if r["service"]})
+        resolutions = sorted({r["resolution"] for r in experiences if r["resolution"]})
+        by_resolution: dict[str, dict] = {}
+        for rec in experiences:
+            if not rec["resolution"]:
+                continue
+            counts = by_resolution.setdefault(rec["resolution"], {"resolution": rec["resolution"], "success": 0, "failure": 0, "unknown": 0})
+            outcome_key = {"SUCCESS": "success", "FAILURE": "failure"}.get(rec["outcome"], "unknown")
+            counts[outcome_key] += 1
+        durations = [r["duration_minutes"] for r in experiences if r["duration_minutes"] is not None]
+        deploy_related_known = sum(bool(r["deployment"]) for r in deploy_known)
+        deploy_pct = round(100 * deploy_related_known / len(deploy_known)) if deploy_known else None
+        patterns.append({
+            "category": category,
+            "count": len(experiences),
+            "services": services,
+            "deploy_related": deploy_related_known if deploy_known else None,
+            "deploy_pct": deploy_pct,
+            "avg_duration_minutes": round(sum(durations) / len(durations), 1) if durations else None,
+            "common_resolutions": resolutions[:3],
+            "remediation_outcomes": sorted(by_resolution.values(), key=lambda r: r["resolution"]),
+            "successful_remediations": successful,
+            "failed_remediations": failed,
+            "insight": f"{len(experiences)} memories share this recorded category.",
+        })
     patterns.sort(key=lambda p: p["count"], reverse=True)
 
-    # Deployment risk: overall share of incidents that followed a deployment.
-    deploy_total = sum(1 for i in incidents if i.get("deployment"))
-    deploy_share = round(100 * deploy_total / total) if total else 0
-
+    deployment_records = [r for r in records if r["deployment_known"]]
+    deploy_total = sum(bool(r["deployment"]) for r in deployment_records)
+    deploy_pct = round(100 * deploy_total / len(deployment_records)) if deployment_records else None
     return {
-        "total_incidents": total,
+        "available": True,
+        "total_incidents": len(records),
         "patterns": patterns,
+        "error": "",
         "deployment_risk": {
-            "deploy_related": deploy_total,
-            "total": total,
-            "share_pct": deploy_share,
-            "warning": (
-                f"{deploy_share}% of all incidents occurred shortly after a deployment. "
-                f"Review consumer/config changes in the deployment checklist."
-            )
-            if deploy_share >= 40
-            else "",
+            "deploy_related": deploy_total if deployment_records else None,
+            "total": len(deployment_records),
+            "share_pct": deploy_pct,
+            "warning": f"{deploy_pct}% of memories with deployment data followed a deployment."
+            if deploy_pct is not None and deploy_pct >= 40 else "",
         },
     }
 
 
-def compute_metrics() -> dict:
-    """Metrics for charts: severity mix, per-service counts, and a learning
-    curve derived from the real investigation history.
-    """
-    incidents = _load_incidents()
-
-    severity_counts: dict[str, int] = defaultdict(int)
-    service_counts: dict[str, int] = defaultdict(int)
-    for inc in incidents:
-        severity_counts[inc.get("severity", "?")] += 1
-        service_counts[inc.get("service", "unknown")] += 1
-
-    # Learning curve from the actual investigation log (oldest first).
-    history = list(reversed(store.list_history()))
-    curve = []
-    for i, rec in enumerate(history, start=1):
-        curve.append(
-            {
-                "index": i,
-                "similar_count": rec.get("similar_count", 0),
-                "feedback": rec.get("feedback"),
-            }
-        )
-
+def _compute_metrics(records: list[dict], history: list[dict] | None = None) -> dict:
+    severity: dict[str, int] = defaultdict(int)
+    by_service: dict[str, int] = defaultdict(int)
+    for rec in records:
+        if rec["severity"]:
+            severity[rec["severity"]] += 1
+        if rec["service"]:
+            by_service[rec["service"]] += 1
+    milestones = []
+    for i, rec in enumerate(reversed(history if history is not None else store.list_history()), start=1):
+        milestones.append({
+            "index": i,
+            "similar_count": rec.get("similar_count", 0),
+            "feedback": rec.get("feedback"),
+        })
     return {
-        "total_incidents": len(incidents),
-        "severity": dict(sorted(severity_counts.items())),
-        "by_service": dict(sorted(service_counts.items(), key=lambda kv: kv[1], reverse=True)),
-        "learning_curve": curve,
+        "available": True,
+        "total_incidents": len(records),
+        "severity": dict(sorted(severity.items())),
+        "by_service": dict(sorted(by_service.items(), key=lambda kv: kv[1], reverse=True)),
+        "outcomes": {
+            "success": sum(r["outcome"] == "SUCCESS" for r in records),
+            "failure": sum(r["outcome"] == "FAILURE" for r in records),
+            "unknown": sum(r["outcome"] is None for r in records),
+        },
+        "learning_curve": milestones,
     }
+
+
+async def get_snapshot() -> dict:
+    """Load the Hindsight bank and derive all screen data from its memories."""
+    try:
+        memories = []
+        offset = 0
+        total = None
+        while total is None or offset < total:
+            result = await hindsight.alist_memories(
+                bank_id=BANK_ID, limit=_PAGE_SIZE, offset=offset
+            )
+            page = getattr(result, "items", None) or []
+            if total is None:
+                total = getattr(result, "total", None)
+            memories.extend(page)
+            offset += len(page)
+            if not page or len(page) < _PAGE_SIZE:
+                break
+
+        records = _experience_records(memories)
+
+        return {
+            "available": True,
+            "error": "",
+            "memory_count": total if total is not None else len(memories),
+            "graph": _build_graph(records),
+            "patterns": _discover_patterns(records),
+            "metrics": _compute_metrics(records),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "available": False,
+            "error": f"Hindsight insights unavailable: {exc}",
+            "memory_count": 0,
+            "graph": {"available": False, "nodes": [], "edges": []},
+            "patterns": {
+                "available": False, "total_incidents": 0, "patterns": [],
+                "error": f"Hindsight insights unavailable: {exc}",
+                "deployment_risk": {"deploy_related": None, "total": 0, "share_pct": None, "warning": ""},
+            },
+            "metrics": {
+                "available": False, "total_incidents": 0, "severity": {},
+                "by_service": {}, "outcomes": {"success": 0, "failure": 0, "unknown": 0},
+                "learning_curve": _compute_metrics([])["learning_curve"],
+            },
+        }
+
+
+def build_graph(records: list[dict]) -> dict:
+    return _build_graph(records)
+
+
+def discover_patterns(records: list[dict]) -> dict:
+    return _discover_patterns(records)
+
+
+def compute_metrics(records: list[dict]) -> dict:
+    return _compute_metrics(records)

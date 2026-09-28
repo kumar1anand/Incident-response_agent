@@ -1,4 +1,4 @@
-"""Central configuration for IncidentIQ.
+"""Central configuration for IncidentDeepDig.
 
 Loads environment variables from the project .env file and exposes them
 as module-level constants so the rest of the app has a single import point.

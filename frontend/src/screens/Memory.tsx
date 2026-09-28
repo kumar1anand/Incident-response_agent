@@ -23,7 +23,7 @@ export default function Memory() {
       <div className="page-head">
         <h1 className="page-title">🧠 Incident Memory</h1>
         <p className="page-desc">
-          Everything IncidentIQ has learned, stored in Hindsight. These memories
+          Everything IncidentDeepDig has learned, stored in Hindsight. These memories
           power every investigation.
         </p>
       </div>
