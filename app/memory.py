@@ -33,10 +33,17 @@ def format_incident(incident: dict) -> str:
     else:
         symptoms_text = str(symptoms)
 
+    deployment = incident.get("deployment", "")
+    deploy_line = f"Deployment: {deployment}" if deployment else "Deployment: none"
+
     return f"""
 Incident ID: {incident.get("id", "UNKNOWN")}
 
 Service: {incident.get("service", "Unknown")}
+Severity: {incident.get("severity", "")}
+Category: {incident.get("category", "")}
+{deploy_line}
+Duration: {incident.get("duration_minutes", "")} minutes
 
 Symptoms:
 {symptoms_text}
@@ -48,8 +55,8 @@ Resolution:
 {incident.get("resolution", "")}
 
 Outcome:
-{incident.get("outcome", "")}
+{incident.get("outcome", incident.get("resolution_status", ""))}
 
-Resolution Status:
-{incident.get("resolution_status", "")}
+Engineer Feedback:
+{incident.get("engineer_feedback", "")}
 """.strip()

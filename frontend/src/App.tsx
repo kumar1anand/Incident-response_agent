@@ -4,12 +4,16 @@ import { api, type Health } from "./api";
 import JudgeMode from "./screens/JudgeMode";
 import Investigate from "./screens/Investigate";
 import Memory from "./screens/Memory";
+import Graph from "./screens/Graph";
+import Patterns from "./screens/Patterns";
 import Learning from "./screens/Learning";
 import History from "./screens/History";
 
 const NAV = [
   { to: "/judge", label: "Judge Mode", icon: "🎬" },
   { to: "/investigate", label: "Investigate", icon: "🚨" },
+  { to: "/graph", label: "Memory Graph", icon: "🕸️" },
+  { to: "/patterns", label: "Patterns", icon: "🔮" },
   { to: "/memory", label: "Memory", icon: "🧠" },
   { to: "/learning", label: "Learning", icon: "📈" },
   { to: "/history", label: "History", icon: "📋" },
@@ -70,6 +74,8 @@ export default function App() {
           <Route path="/" element={<Navigate to="/judge" replace />} />
           <Route path="/judge" element={<JudgeMode />} />
           <Route path="/investigate" element={<Investigate />} />
+          <Route path="/graph" element={<Graph />} />
+          <Route path="/patterns" element={<Patterns />} />
           <Route path="/memory" element={<Memory />} />
           <Route path="/learning" element={<Learning />} />
           <Route path="/history" element={<History />} />

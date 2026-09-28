@@ -79,6 +79,62 @@ export interface Health {
   bank_id: string;
 }
 
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: "service" | "incident" | "category" | "resolution";
+  weight: number;
+  severity?: string;
+  service?: string;
+  category?: string;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  kind: string;
+}
+
+export interface GraphResponse {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+export interface Pattern {
+  category: string;
+  count: number;
+  services: string[];
+  deploy_related: number;
+  deploy_pct: number;
+  avg_duration_minutes: number;
+  common_resolutions: string[];
+  insight: string;
+}
+
+export interface PatternsResponse {
+  total_incidents: number;
+  patterns: Pattern[];
+  deployment_risk: {
+    deploy_related: number;
+    total: number;
+    share_pct: number;
+    warning: string;
+  };
+}
+
+export interface CurvePoint {
+  index: number;
+  similar_count: number;
+  feedback: "worked" | "didnt_work" | null;
+}
+
+export interface MetricsResponse {
+  total_incidents: number;
+  severity: Record<string, number>;
+  by_service: Record<string, number>;
+  learning_curve: CurvePoint[];
+}
+
 async function req<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     headers: { "Content-Type": "application/json" },
@@ -126,4 +182,10 @@ export const api = {
   history: () => req<HistoryResponse>("/api/history"),
 
   learning: () => req<LearningResponse>("/api/learning"),
+
+  graph: () => req<GraphResponse>("/api/graph"),
+
+  patterns: () => req<PatternsResponse>("/api/patterns"),
+
+  metrics: () => req<MetricsResponse>("/api/metrics"),
 };

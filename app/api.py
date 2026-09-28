@@ -25,6 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app import store
+from app import insights
 from app.incident_agent import (
     investigate_incident_structured,
     record_resolution,
@@ -228,3 +229,21 @@ def learning():
         "successful_resolutions": worked,
         "milestones": milestones,
     }
+
+
+@app.get("/api/graph")
+def graph():
+    """Knowledge graph of services, incidents, categories for the Memory Graph."""
+    return insights.build_graph()
+
+
+@app.get("/api/patterns")
+def patterns():
+    """Recurring incident patterns + deployment-correlation risk."""
+    return insights.discover_patterns()
+
+
+@app.get("/api/metrics")
+def metrics():
+    """Aggregate metrics for charts (severity mix, per-service, learning curve)."""
+    return insights.compute_metrics()

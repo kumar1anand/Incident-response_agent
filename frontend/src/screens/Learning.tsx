@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
-import { api, type LearningResponse } from "../api";
+import { api, type LearningResponse, type MetricsResponse } from "../api";
+import { LineChart, BarChart } from "../components/Charts";
 
 export default function Learning() {
   const [data, setData] = useState<LearningResponse | null>(null);
+  const [metrics, setMetrics] = useState<MetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api
-      .learning()
-      .then(setData)
+    Promise.all([api.learning(), api.metrics()])
+      .then(([l, m]) => {
+        setData(l);
+        setMetrics(m);
+      })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load."))
       .finally(() => setLoading(false));
   }, []);
@@ -26,6 +30,19 @@ export default function Learning() {
 
       {error && <div className="error-banner">{error}</div>}
 
+      {metrics && (
+        <div className="chart-grid2">
+          <div className="card chart-card">
+            <div className="section-label">Recall growth (per investigation)</div>
+            <LineChart points={metrics.learning_curve} />
+          </div>
+          <div className="card chart-card">
+            <div className="section-label">Incidents by service</div>
+            <BarChart data={metrics.by_service} />
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="empty">
           <div className="big">📈</div>
@@ -34,8 +51,8 @@ export default function Learning() {
       ) : !data || data.total_investigations === 0 ? (
         <div className="empty">
           <div className="big">🌱</div>
-          No investigations yet. Run one on the Investigate screen to start the
-          learning curve.
+          No investigations yet. Run one on the Investigate screen (or Judge
+          Mode) to grow the learning curve.
         </div>
       ) : (
         <>
